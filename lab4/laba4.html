@@ -1,0 +1,139 @@
+﻿<HTML>
+<BODY>
+<p> Lab #4 by C_G </p>
+
+<canvas id="labа4" width="500" height="500">
+	<script>
+function createLine(context, x_0, y_0, x_1, y_1)
+{
+    function createPixel(x_0, y_0)
+    {
+        context.fillRect(x_0, y_0, 1, 1);
+    }
+    var deltaX = Math.abs(x_1 - x_0);
+    var deltaY = Math.abs(y_1 - y_0);
+    var error = 0;
+    if(deltaX >= deltaY)
+    {
+        if(x_0 > x_1)
+        {
+            [x_0, x_1] = [x_1, x_0];
+            [y_0, y_1] = [y_1, y_0];
+        }
+        var deltaError = deltaY;
+        if(y_0 >= y_1)
+        { 
+            while(x_0 <= x_1)
+            {
+                createPixel(x_0, y_0);
+                error += deltaError;
+                if((error << 2) > deltaX)
+                {
+                    --y_0;
+                    error -= deltaX;
+                }
+                ++x_0;
+            }
+        }
+        else
+        {
+            while(x_0 <= x_1)
+            {
+                createPixel(x_0, y_0);
+                error += deltaError;
+                if((error << 2) > deltaX)
+                {
+                    ++y_0;
+                    error -= deltaX;
+                }
+                ++x_0;
+            }
+        }
+    }
+    else
+    {
+        if(y_0 > y_1)
+        {
+            [x_0, x_1] = [x_1, x_0];
+            [y_0, y_1] = [y_1, y_0];
+        }
+        var deltaError = deltaX;
+        if(x_0 >= x_1)
+        {
+            while(y_0 <= y_1)
+            {
+                createPixel(x_0, y_0);
+                error += deltaError;
+                if((error << 2) > deltaY)
+                {
+                    --x_0;
+                    error -= deltaY;
+                }
+                ++y_0;
+            }
+        }
+        else
+        {
+            while(y_0 <= y_1)
+            {
+                createPixel(x_0, y_0);
+                error += deltaError;
+                if((error << 2) > deltaY)
+                {
+                    ++x_0;
+                    error -= deltaY;
+                }
+                ++y_0;
+            }
+        }
+    }
+}
+
+function drawRectangle(context, rectangle)
+{
+    createLine(context, rectangle[0], rectangle[1], rectangle[2], rectangle[1]);
+    createLine(context, rectangle[2], rectangle[1], rectangle[2], rectangle[3]);
+    createLine(context, rectangle[2], rectangle[3], rectangle[0], rectangle[3]);
+    createLine(context, rectangle[0], rectangle[3], rectangle[0], rectangle[1]);
+}
+
+var canvas = document.getElementById("labа4");
+var context = canvas.getContext("2d");
+context.fillStyle = "black";   
+var points = [];
+var pcount = 0;
+var newWidth = 100;
+var newHeight = 50;
+var rectangle = [200 - newWidth, 200 - newHeight, 200 + newWidth, 200 + newHeight];
+drawRectangle(context, rectangle);
+function createMouseEvent()
+            {
+                var context = canvas.getContext("2d");
+                var coordinateX = null;
+                var coordinateY = null;
+                function eventDown()
+                {
+                    context.clearRect(0, 0, canvas.width, 200 - newHeight);
+                    context.clearRect(0, 200 + newHeight + 1, canvas.width, canvas.height);
+                    context.clearRect(0, 0, 200 - newWidth, canvas.height);
+                    context.clearRect(200 + newWidth + 1, 0, canvas.width, canvas.height);
+                    if(event.button == 0)
+                    {
+                        coordinateX = event.offsetX;
+                        coordinateY = event.offsetY;
+                    }
+                }
+                function eventUp()
+                {
+                    createLine(context, coordinateX, coordinateY, event.offsetX, event.offsetY);
+                }
+                return { onDown: eventDown, onUp: eventUp };
+            }
+var mouseEvent = createMouseEvent();
+canvas.addEventListener("mousedown", mouseEvent.onDown);
+canvas.addEventListener("mouseup", mouseEvent.onUp);
+
+</script>
+</canvas>
+</BODY>
+</HTML>

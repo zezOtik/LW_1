@@ -1,0 +1,189 @@
+<HTML>
+<BODY>
+<p>Lab #5 C_G</p>
+<canvas id='lab5' height='700' width='1500'>
+<script>
+	
+	var canvas = document.getElementById('lab5');
+	var ctx = canvas.getContext('2d');
+	canvas.addEventListener("click", onClick);	
+	
+    function drawLine(x0, y0, x1, y1)
+	{
+		function sign(x) 
+		{
+			return (x > 0) ? 1 : (x < 0) ? -1 : 0;
+		};
+		var x, y, dx, dy, incx, incy, pdx, pdy, es, el, error;
+		dx = x1 - x0; 
+		dy = y1 - y0; 	
+		incx = sign(dx);
+		incy = sign(dy);
+		if (dx < 0) 
+            dx = Math.abs(dx);
+		if (dy < 0)
+            dy = Math.abs(dy);
+		if(dx > dy) 
+		{
+			pdx = incx; 
+			pdy = 0;
+			es = dy; 
+			el = dx;	
+		}
+		else 
+		{
+			pdx = 0;	
+			pdy = incy;
+			es = dx;
+			el = dy; 
+		}
+		x = x0;
+		y = y0;
+		error = el / 2;
+		ctx.fillRect(x, y, 1, 1);
+		for (t = 0; t < el; t++) 
+		{
+			error -= es;
+			if (error < 0)
+			{
+				error += el;
+				x += incx; 
+				y += incy;
+			}
+			else
+			{
+				x += pdx; 
+				y += pdy; 
+			}
+			ctx.fillRect(x, y, 1, 1);
+		}
+	}
+
+	function BezierBasis(i, n, t) 
+	{		
+		function f(n) 
+		{
+			return (n <= 1) ? 1 : n * f(n-1);
+		};		
+		
+		return (f(n) / (f(i) * f(n-i))) * Math.pow(t, i) * Math.pow(1-t, n-i);
+	}
+
+	function BezierPoints(arr, step) 
+	{
+		if (step == undefined)
+			step = 0.01;
+		var result = [];
+		for (var t = 0; t < 1 + step; t += step) 
+		{
+			if (t > 1) 
+				t = 1;
+			var index = result.length;
+			result[index] = new Array(0, 0);
+			for (var i = 0; i < arr.length; i++) 
+			{
+				var b = BezierBasis(i, arr.length-1, t);
+				result[index][0] += arr[i][0] * b;
+				result[index][1] += arr[i][1] * b;
+			}
+		}
+		return result;
+	}
+	
+	function BezierLine(arr) 
+	{
+		for (var i = 0; i < arr.length - 1; ++i) 
+		{
+			drawLine(arr[i][0], arr[i][1], arr[i+1][0], arr[i+1][1]);
+		}
+	}	
+	
+	function Matrix(vector, matrix) 
+	{
+		var result = new Array();
+		result[0] = vector[0]*matrix[0][0] + vector[1]*matrix[1][0] + vector[2]*matrix[2][0] + vector[3]*matrix[3][0];
+		result[1] = vector[0]*matrix[0][1] + vector[1]*matrix[1][1] + vector[2]*matrix[2][1] + vector[3]*matrix[3][1];
+		result[2] = vector[0]*matrix[0][2] + vector[1]*matrix[1][2] + vector[2]*matrix[2][2] + vector[3]*matrix[3][2];
+		result[3] = vector[0]*matrix[0][3] + vector[1]*matrix[1][3] + vector[2]*matrix[2][3] + vector[3]*matrix[3][3];
+		return result;
+	}
+	
+	function figureCenter(x1, y1, x2, y2) 
+	{
+		var result = new Array();
+		result[0] = x1 + Math.floor((x2-x1)/2) + (y2-y1);
+		result[1] = y1 + Math.floor((y2-y1)/2) + (x2-x1);
+		return result;
+	}
+	
+	function rotationAroundY(points, center, angle) 
+	{
+		var result = new Array();
+		var temp;
+		var matrix = new Array();
+		
+		for (var i = 0; i < points.length; ++i) 
+		{
+			matrix[0] = new Array(1, 0, 0, 0);
+			matrix[1] = new Array(0, 1, 0, 0);
+			matrix[2] = new Array(0, 0, 1, 0);
+			matrix[3] = new Array((-1)*center[0], (-1)*center[1], 0, 1);
+			temp = Matrix(new Array(points[i][0], points[i][1], 0, 1), matrix);
+			
+			matrix[0] = new Array(Math.cos(angle*Math.PI/180), 0, (-1)*Math.sin(angle*Math.PI/180), 0);
+			matrix[1] = new Array(0, 1, 0, 0);
+			matrix[2] = new Array(Math.sin(angle*Math.PI/180), 0, Math.cos(angle*Math.PI/180), 0);
+			matrix[3] = new Array(0, 0, 0, 1);
+			temp = Matrix(new Array(temp[0], temp[1], temp[2], temp[3]), matrix);
+			
+			matrix[0] = new Array(1, 0, 0, 0);
+			matrix[1] = new Array(0, Math.cos(20*Math.PI/180), Math.sin(20*Math.PI/180), 0);
+			matrix[2] = new Array(0, (-1)*Math.sin(20*Math.PI/180), Math.cos(20*Math.PI/180), 0);
+			matrix[3] = new Array(0, 0, 0, 1);	
+			temp = Matrix(new Array(temp[0], temp[1], temp[2], temp[3]), matrix);
+			
+			matrix[0] = new Array(1, 0, 0, 0);
+			matrix[1] = new Array(0, 1, 0, 0);
+			matrix[2] = new Array(0, 0, 1, 0);
+			matrix[3] = new Array(center[0], center[1], 0, 1);
+			temp = Matrix(new Array(temp[0], temp[1], temp[2], temp[3]), matrix);
+			
+			result[i] = new Array(Math.floor(temp[0]/temp[3]), Math.floor(temp[1]/temp[3]));
+		}
+		
+		return result;
+	}	
+	
+	var Points = new Array();
+	var i = 0;
+	var angle = 12;
+	var newPoints;
+	
+	function onClick()
+	{
+		if (event.which == 1)
+		{
+			if (i == 2) {
+				var x = event.offsetX;
+				var y = event.offsetY;
+				Points[i] = new Array(x, y);
+				BezierLine(BezierPoints(Points, 0.01));
+				for (var j = 0; j < 360; ++j) {
+					newPoints = rotationAroundY(Points, figureCenter(Points[0][0], Points[0][1], Points[2][0], Points[2][1]), angle + angle*j);
+					BezierLine(BezierPoints(newPoints, 0.01));
+				}
+				i = 0;
+				Points = [];
+			}
+			else {
+				var x = event.offsetX;
+				var y = event.offsetY;
+				Points[i] = new Array(x, y);
+				i++;
+			}
+		}
+	}
+</script>
+</canvas>
+</BODY>
+</HTML>
